@@ -11,6 +11,78 @@
 %% API
 -export([main/0]).
 
+getBalanceProcess(Clients, Deposit, Pin) ->
+  ClientPid = findClient(Clients, Deposit),
+  ClientPid ! {get_card, Deposit, self()},
+  receive
+    {card, Card} ->
+      GoodPin = checkPin(Pin, Card),
+      if
+        GoodPin -> getBalance(Card);
+        true -> false
+      end
+  end.
+
+getMoneyProcess(Clients, Deposit, Pin, Sum) ->
+  ClientPid = findClient(Clients, Deposit),
+  ClientPid ! {get_card, Deposit, self()},
+  receive
+    {card, Card} ->
+      GoodPin = checkPin(Pin, Card),
+      GoodSum = checkSum(Sum, Card),
+      if
+        (GoodPin and GoodSum) ->
+          ClientPid ! {get_money, Deposit, Sum},
+          true;
+        true -> false
+      end
+  end.
+
+putMoneyProcess(Clients, Deposit, Pin, Sum) ->
+  ClientPid = findClient(Clients, Deposit),
+  ClientPid ! {get_card, Deposit, self()},
+  receive
+    {card, Card} ->
+      GoodPin = checkPin(Pin, Card),
+      if
+        GoodPin ->
+          ClientPid ! {put_money, Deposit, Sum},
+          true;
+        true -> false
+      end
+  end.
+
+sendMoneyProcess(Clients, Deposit, Pin, DepositTo, Sum) ->
+  Ok = getMoneyProcess(Clients, Deposit, Pin, Sum),
+  if
+    Ok == true ->
+      putMoneyWithoutPinProcess(Clients, DepositTo, Sum),
+      true;
+    true -> false
+  end.
+
+putMoneyWithoutPinProcess(Clients, Deposit, Sum) ->
+  ClientPid = findClient(Clients, Deposit),
+  ClientPid ! {get_card, Deposit, self()},
+  receive
+    {card, _} -> ClientPid ! {put_money, Deposit, Sum}
+  end.
+
+findClient([], _) -> false;
+findClient([ClientPid | T], Deposit) ->
+  ClientPid ! {has_card, Deposit, self()},
+  receive
+    {have, ClientPid, true} -> ClientPid;
+    {have, _, false} -> findClient(T, Deposit)
+  end.
+
+getBalance({_, _, _, Sum, _}) -> Sum.
+
+checkSum(Sum, {_, _, _, RealSum, _}) -> (RealSum >= Sum).
+
+checkPin(Pin, {_, Pin, _, _, _}) -> true;
+checkPin(_, {_, _, _, _, _}) -> false.
+
 main() ->
   ClientsCount = 3,
   BankPid = spawn(fun() -> bank(ClientsCount) end),
