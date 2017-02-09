@@ -9,9 +9,38 @@
 -author("nekrasov").
 
 %% API
--export([]).
+-export([main/0]).
 
-bankClient(ClientId, Cards) ->
+main() ->
+  ClientsCount = 3,
+  BankPid = spawn(fun() -> bank(ClientsCount) end),
+  global:register_name(bank, BankPid).
+
+bank(Clients) when is_list(Clients) ->
+  receive
+    {get_clients, Pid} ->
+      Pid ! {clients, Clients};
+    {add_client, ClientId} ->
+      NewClientPid = spawn(fun() -> bankClient(ClientId, 3) end),
+      NewClientsList = [NewClientPid | Clients],
+      bank(NewClientsList)
+  end;
+bank(ClientsCount) ->
+  Clients = createClients(ClientsCount),
+  bank(Clients).
+
+createClients(0) -> [];
+createClients(ClientsCount) ->
+  ClientId = generateClientId(ClientsCount),
+  CardsCount = generateCardsCount(),
+  ClientPid = spawn(fun() -> bankClient(ClientId, CardsCount) end),
+  [ClientPid | createClients(ClientsCount - 1)].
+
+generateClientId(X) -> X * 3.
+
+generateCardsCount() -> rand:uniform(5).
+
+bankClient(ClientId, Cards) when is_list(Cards) ->
   receive
     {has_card, Deposit, Pid} ->
       HasCard = hasCard(Cards, Deposit),
