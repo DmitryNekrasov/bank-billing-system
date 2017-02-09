@@ -21,6 +21,11 @@
   terminate/2,
   code_change/3]).
 
+-export([getBalance/2,
+  putMoney/3,
+  getMoney/3,
+  sendMoney/4]).
+
 -define(SERVER, ?MODULE).
 
 -record(state, {}).
@@ -38,7 +43,7 @@
 -spec(start_link() ->
   {ok, Pid :: pid()} | ignore | {error, Reason :: term()}).
 start_link() ->
-  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+  gen_server:start_link({global, ?MODULE}, ?MODULE, [], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -59,6 +64,7 @@ start_link() ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([]) ->
+  %% TODO working_bank:main(),
   {ok, #state{}}.
 
 %%--------------------------------------------------------------------
@@ -76,8 +82,32 @@ init([]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_call({get_balance, Deposit, Pin}, _From, State) ->
+  Reply = 111, %% TODO
+  {reply, Reply, State};
+handle_call({put_money, Deposit, Pin, Sum}, _From, State) ->
+  Reply = 222, %% TODO
+  {reply, Reply, State};
+handle_call({get_money, Deposit, Pin, Sum}, _From, State) ->
+  Reply = 333, %% TODO
+  {reply, Reply, State};
+handle_call({send_money, Deposit, Pin, DepositTo, Sum}, _From, State) ->
+  Reply = 444, %% TODO
+  {reply, Reply, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
+
+getBalance(Deposit, Pin) ->
+  gen_server:call({global, ?MODULE}, {get_balance, Deposit, Pin}).
+
+putMoney(Deposit, Pin, Sum) ->
+  gen_server:call({global, ?MODULE}, {put_money, Deposit, Pin, Sum}).
+
+getMoney(Deposit, Pin, Sum) ->
+  gen_server:call({global, ?MODULE}, {get_money, Deposit, Pin, Sum}).
+
+sendMoney(Deposit, Pin, DepositTo, Sum) ->
+  gen_server:call({global, ?MODULE}, {send_money, Deposit, Pin, DepositTo, Sum}).
 
 %%--------------------------------------------------------------------
 %% @private
