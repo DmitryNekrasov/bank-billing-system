@@ -194,7 +194,9 @@ createCards(ClientId, CardsCount) ->
   Date = generateDate(ClientId, CardsCount),
   Sum = generateSum(),
   Currency = generateCurrency(),
-  [{Deposit, Pin, Date, Sum, Currency} | createCards(ClientId, CardsCount - 1)].
+  Card = {Deposit, Pin, Date, Sum, Currency},
+  erlang:display(Card),
+  [Card | createCards(ClientId, CardsCount - 1)].
 
 generateDeposit(X, Y) -> 10 * X + Y.
 
