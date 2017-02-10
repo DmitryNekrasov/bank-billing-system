@@ -9,7 +9,40 @@
 -author("nekrasov").
 
 %% API
--export([main/0]).
+-export([main/0,
+  getBalance/2,
+  getMoney/3,
+  putMoney/3,
+  sendMoney/4]).
+
+getBalance(Deposit, Pin) ->
+  BankPid = global:whereis_name(bank),
+  BankPid ! {get_clients, self()},
+  receive
+    {clients, Clients} ->
+      getBalanceProcess(Clients, Deposit, Pin)
+  end.
+
+getMoney(Deposit, Pin, Sum) ->
+  BankPid = global:whereis_name(bank),
+  BankPid ! {get_clients, self()},
+  receive
+    {clients, Clients} -> getMoneyProcess(Clients, Deposit, Pin, Sum)
+  end.
+
+putMoney(Deposit, Pin, Sum) ->
+  BankPid = global:whereis_name(bank),
+  BankPid ! {get_clients, self()},
+  receive
+    {clients, Clients} -> putMoneyProcess(Clients, Deposit, Pin, Sum)
+  end.
+
+sendMoney(Deposit, Pin, DepositTo, Sum) ->
+  BankPid = global:whereis_name(bank),
+  BankPid ! {get_clients, self()},
+  receive
+    {clients, Clients} -> sendMoneyProcess(Clients, Deposit, Pin, DepositTo, Sum)
+  end.
 
 getBalanceProcess(Clients, Deposit, Pin) ->
   ClientPid = findClient(Clients, Deposit),
@@ -91,7 +124,8 @@ main() ->
 bank(Clients) when is_list(Clients) ->
   receive
     {get_clients, Pid} ->
-      Pid ! {clients, Clients};
+      Pid ! {clients, Clients},
+      bank(Clients);
     {add_client, ClientId} ->
       NewClientPid = spawn(fun() -> bankClient(ClientId, 3) end),
       NewClientsList = [NewClientPid | Clients],
@@ -110,16 +144,18 @@ createClients(ClientsCount) ->
 
 generateClientId(X) -> X * 3.
 
-generateCardsCount() -> rand:uniform(5).
+generateCardsCount() -> 5.
 
 bankClient(ClientId, Cards) when is_list(Cards) ->
   receive
     {has_card, Deposit, Pid} ->
       HasCard = hasCard(Cards, Deposit),
-      Pid ! {have, self(), HasCard};
+      Pid ! {have, self(), HasCard},
+      bankClient(ClientId, Cards);
     {get_card, Deposit, Pid} ->
       Card = getCard(Cards, Deposit),
-      Pid ! {card, Card};
+      Pid ! {card, Card},
+      bankClient(ClientId, Cards);
     {put_money, Deposit, Sum} ->
       UpdateCards = putMoneyToDeposit(Cards, Deposit, Sum),
       bankClient(ClientId, UpdateCards);
@@ -147,7 +183,7 @@ putMoneyToDeposit([H | T], Deposit, Sum) ->
 
 getMoneyFromDeposit([], _, _) -> [];
 getMoneyFromDeposit([{Deposit, Pin, Date, OldSum, Currency} | T], Deposit, Sum) ->
-  [{Deposit, Pin, Date, OldSum + Sum, Currency} | T];
+  [{Deposit, Pin, Date, OldSum - Sum, Currency} | T];
 getMoneyFromDeposit([H | T], Deposit, Sum) ->
   [H | getMoneyFromDeposit(T, Deposit, Sum)].
 

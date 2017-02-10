@@ -64,7 +64,7 @@ start_link() ->
   {ok, State :: #state{}} | {ok, State :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term()} | ignore).
 init([]) ->
-  %% TODO working_bank:main(),
+  bank:main(),
   {ok, #state{}}.
 
 %%--------------------------------------------------------------------
@@ -83,16 +83,16 @@ init([]) ->
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
 handle_call({get_balance, Deposit, Pin}, _From, State) ->
-  Reply = 111, %% TODO
+  Reply = bank:getBalance(Deposit, Pin),
   {reply, Reply, State};
 handle_call({put_money, Deposit, Pin, Sum}, _From, State) ->
-  Reply = 222, %% TODO
+  Reply = bank:putMoney(Deposit, Pin, Sum),
   {reply, Reply, State};
 handle_call({get_money, Deposit, Pin, Sum}, _From, State) ->
-  Reply = 333, %% TODO
+  Reply = bank:getMoney(Deposit, Pin, Sum),
   {reply, Reply, State};
 handle_call({send_money, Deposit, Pin, DepositTo, Sum}, _From, State) ->
-  Reply = 444, %% TODO
+  Reply = bank:sendMoney(Deposit, Pin, DepositTo, Sum),
   {reply, Reply, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
