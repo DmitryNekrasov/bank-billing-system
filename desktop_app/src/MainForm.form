@@ -63,6 +63,7 @@
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
+                      <selected value="true"/>
                       <text value="Проверить баланс"/>
                     </properties>
                   </component>
@@ -111,28 +112,26 @@
                         <preferred-size width="150" height="-1"/>
                       </grid>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <text value="64"/>
+                    </properties>
                   </component>
                   <vspacer id="52e85">
                     <constraints>
                       <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                     </constraints>
                   </vspacer>
-                  <component id="8b3a3" class="javax.swing.JTextField" binding="pinTextField">
-                    <constraints>
-                      <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                        <preferred-size width="150" height="-1"/>
-                      </grid>
-                    </constraints>
-                    <properties/>
-                  </component>
                   <component id="34be5" class="javax.swing.JTextField" binding="sumTextField">
                     <constraints>
                       <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                         <preferred-size width="150" height="-1"/>
                       </grid>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <editable value="false"/>
+                      <enabled value="true"/>
+                      <text value="100"/>
+                    </properties>
                   </component>
                   <component id="b6177" class="javax.swing.JTextField" binding="depositToTextField">
                     <constraints>
@@ -140,7 +139,11 @@
                         <preferred-size width="150" height="-1"/>
                       </grid>
                     </constraints>
-                    <properties/>
+                    <properties>
+                      <editable value="false"/>
+                      <enabled value="true"/>
+                      <text value="32"/>
+                    </properties>
                   </component>
                   <component id="590cc" class="javax.swing.JLabel" binding="depositLabel">
                     <constraints>
@@ -163,6 +166,7 @@
                       <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
+                      <enabled value="false"/>
                       <text value="Сумма:"/>
                     </properties>
                   </component>
@@ -171,7 +175,18 @@
                       <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
+                      <enabled value="false"/>
                       <text value="Номер карты получателя:"/>
+                    </properties>
+                  </component>
+                  <component id="6995" class="javax.swing.JPasswordField" binding="pinPasswordField">
+                    <constraints>
+                      <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                        <preferred-size width="150" height="-1"/>
+                      </grid>
+                    </constraints>
+                    <properties>
+                      <text value="16"/>
                     </properties>
                   </component>
                 </children>
