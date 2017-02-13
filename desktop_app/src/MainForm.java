@@ -18,8 +18,20 @@ public class MainForm extends JFrame {
     private JTextField depositToTextField;
     private JButton performButton;
     private JTextArea logTextArea;
+    private JButton clearLogButton;
 
-    public MainForm() {
+    private final Communicator communicator;
+
+    MainForm(Communicator communicator) {
+        final String CONNECT_TO_SERVER_ERROR_MESSAGE = "Ошибка соединения с сервером";
+
+        this.communicator = communicator;
+        if (communicator.connectToServer()) {
+            updateCurrency();
+        } else {
+            System.err.println(CONNECT_TO_SERVER_ERROR_MESSAGE);
+        }
+
         setContentPane(rootPanel);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
@@ -51,27 +63,54 @@ public class MainForm extends JFrame {
         });
 
         currencyUpdateButton.addActionListener(e -> {
-            int eur = 70;
-            int usd = 60;
-            currencyLabel.setText("EUR: " + eur + ", USD: " + usd);
+            if (communicator.connectToServer()) {
+                updateCurrency();
+            } else {
+                System.err.println(CONNECT_TO_SERVER_ERROR_MESSAGE);
+            }
         });
 
         performButton.addActionListener(e -> {
-            int deposit = Integer.valueOf(depositTextField.getText());
-            int pin = Integer.valueOf(new String(pinPasswordField.getPassword()));
-            if (getBalanceRadioButton.isSelected()) {
-                logTextArea.append("balance " + deposit + " " + pin + "\n");
-            } else {
-                double sum = Double.valueOf(sumTextField.getText());
-                if (getMoneyRadioButton.isSelected()) {
-                    logTextArea.append("get " + deposit + " " + pin + " " + sum + "\n");
-                } else if (putMoneyRadioButton.isSelected()) {
-                    logTextArea.append("put " + deposit + " " + pin + " " + sum + "\n");
+            if (communicator.connectToServer()) {
+                int deposit = Integer.valueOf(depositTextField.getText());
+                int pin = Integer.valueOf(new String(pinPasswordField.getPassword()));
+                if (getBalanceRadioButton.isSelected()) {
+                    Communicator.Balance balance = communicator.getBalance(deposit, pin);
+                    if (balance != null) {
+                        logTextArea.append("Баланс карты " + deposit + ": " + balance + "\n");
+                    } else {
+                        logTextArea.append("Некорректный пин\n");
+                    }
                 } else {
-                    int depositTo = Integer.valueOf(depositToTextField.getText());
-                    logTextArea.append("send " + deposit + " " + pin + " " + sum + " " + depositTo + "\n");
+                    double sum = Double.valueOf(sumTextField.getText());
+                    if (getMoneyRadioButton.isSelected()) {
+                        if (communicator.getMoney(deposit, pin, sum)) {
+                            logTextArea.append("Средства успешно списаны\n");
+                        } else {
+                            logTextArea.append("Ошибка списания средств\n");
+                        }
+                    } else if (putMoneyRadioButton.isSelected()) {
+                        if (communicator.putMoney(deposit, pin, sum)) {
+                            logTextArea.append("Средства успешно внесены\n");
+                        } else {
+                            logTextArea.append("Ошибка внесения средств\n");
+                        }
+                    } else {
+                        int depositTo = Integer.valueOf(depositToTextField.getText());
+                        if (communicator.sendMoney(deposit, pin, depositTo, sum)) {
+                            logTextArea.append("Средства успешно переведены\n");
+                        } else {
+                            logTextArea.append("Ошибка перевода средств\n");
+                        }
+                    }
                 }
+            } else {
+                System.err.println(CONNECT_TO_SERVER_ERROR_MESSAGE);
             }
+        });
+
+        clearLogButton.addActionListener(e -> {
+            logTextArea.setText("");
         });
     }
 
@@ -83,5 +122,12 @@ public class MainForm extends JFrame {
     private void setDepositToEnabled(boolean value) {
         depositToLabel.setEnabled(value);
         depositToTextField.setEditable(value);
+    }
+
+    private void updateCurrency() {
+        int[] currency = communicator.getCurrency();
+        int eur = currency[0];
+        int usd = currency[1];
+        currencyLabel.setText("EUR: " + eur + ", USD: " + usd);
     }
 }
