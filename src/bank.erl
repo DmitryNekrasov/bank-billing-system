@@ -170,6 +170,7 @@ convert(Value, Euro, Dollar, usd, eur) -> (Value * Dollar) / Euro;
 convert(Value, _Euro, _Dollar, C, C) -> Value.
 
 bank(Clients) when is_list(Clients) ->
+  erlang:display(node()),
   receive
     {get_clients, Pid} ->
       Pid ! {clients, Clients},
