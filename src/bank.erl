@@ -51,7 +51,7 @@ getBalanceProcess(Clients, Deposit, Pin) ->
     {card, Card} ->
       GoodPin = checkPin(Pin, Card),
       if
-        GoodPin -> getBalance(Card);
+        GoodPin -> {getBalance(Card), getCurrency(Card)};
         true -> false
       end
   end.
@@ -66,7 +66,7 @@ getMoneyProcess(Clients, Deposit, Pin, Sum) ->
       if
         (GoodPin and GoodSum) ->
           ClientPid ! {get_money, Deposit, Sum},
-          true;
+          Card;
         true -> false
       end
   end.
@@ -86,19 +86,25 @@ putMoneyProcess(Clients, Deposit, Pin, Sum) ->
   end.
 
 sendMoneyProcess(Clients, Deposit, Pin, DepositTo, Sum) ->
-  Ok = getMoneyProcess(Clients, Deposit, Pin, Sum),
+  Card = getMoneyProcess(Clients, Deposit, Pin, Sum),
   if
-    Ok == true ->
-      putMoneyWithoutPinProcess(Clients, DepositTo, Sum),
+    Card =/= false ->
+      putMoneyWithoutPinProcess(Clients, DepositTo, Sum, getCurrency(Card)),
       true;
     true -> false
   end.
 
-putMoneyWithoutPinProcess(Clients, Deposit, Sum) ->
+putMoneyWithoutPinProcess(Clients, Deposit, Sum, CurrencyFrom) ->
   ClientPid = findClient(Clients, Deposit),
   ClientPid ! {get_card, Deposit, self()},
   receive
-    {card, _} -> ClientPid ! {put_money, Deposit, Sum}
+    {card, Card} ->
+      CurrencyTo = getCurrency(Card),
+      ConverterPid = global:whereis_name(converter),
+      ConverterPid ! {convert, Sum, CurrencyFrom, CurrencyTo, self()},
+      receive
+        {convert_result, NewValue} -> ClientPid ! {put_money, Deposit, NewValue}
+      end
   end.
 
 findClient([], _) -> false;
@@ -111,6 +117,8 @@ findClient([ClientPid | T], Deposit) ->
 
 getBalance({_, _, _, Sum, _}) -> Sum.
 
+getCurrency({_, _, _, _, Currency}) -> Currency.
+
 checkSum(Sum, {_, _, _, RealSum, _}) -> (RealSum >= Sum).
 
 checkPin(Pin, {_, Pin, _, _, _}) -> true;
@@ -119,7 +127,35 @@ checkPin(_, {_, _, _, _, _}) -> false.
 main() ->
   ClientsCount = 3,
   BankPid = spawn(fun() -> bank(ClientsCount) end),
-  global:register_name(bank, BankPid).
+  global:register_name(bank, BankPid),
+  ConverterPid = spawn(fun() -> converter(70, 60) end),
+  global:register_name(converter, ConverterPid),
+  spawn(fun() -> centralBank(ConverterPid) end).
+
+centralBank(PidConverter) ->
+  Time = rand:uniform(10000),
+  timer:sleep(Time),
+  NewEuro = 60 + rand:uniform(20),
+  NewDollar = 50 + rand:uniform(20),
+  PidConverter ! {update, NewEuro, NewDollar},
+  centralBank(PidConverter).
+
+converter(Euro, Dollar) ->
+  receive
+    {convert, Value, C1, C2, Pid} ->
+      NewValue = convert(Value, Euro, Dollar, C1, C2),
+      Pid ! {convert_result, NewValue},
+      converter(Euro, Dollar);
+    {update, NewEuro, NewDollar} ->
+      converter(NewEuro, NewDollar)
+  end.
+
+convert(Value, Euro, _Dollar, rub, eur) -> Value / Euro;
+convert(Value, Euro, _Dollar, eur, rub) -> Value * Euro;
+convert(Value, _Euro, Dollar, rub, usd) -> Value / Dollar;
+convert(Value, _Euro, Dollar, usd, rub) -> Value * Dollar;
+convert(Value, Euro, Dollar, eur, usd) -> (Value * Euro) / Dollar;
+convert(Value, Euro, Dollar, usd, eur) -> (Value * Dollar) / Euro.
 
 bank(Clients) when is_list(Clients) ->
   receive
@@ -196,6 +232,7 @@ createCards(ClientId, CardsCount) ->
   Currency = generateCurrency(),
   Card = {Deposit, Pin, Date, Sum, Currency},
   erlang:display(Card),
+  timer:sleep(100),
   [Card | createCards(ClientId, CardsCount - 1)].
 
 generateDeposit(X, Y) -> 10 * X + Y.
