@@ -12,5 +12,9 @@ public class Main {
 
         Communicator.Balance balance = communicator.getBalance(64, 16);
         System.out.println(balance);
+
+        System.out.println(communicator.putMoney(64, 16, 1000));
+        balance = communicator.getBalance(64, 16);
+        System.out.println(balance);
     }
 }
