@@ -10,7 +10,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://C:/Program Files/erl8.0/lib/jinterface-1.7/priv/OtpErlang.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/jinterface-1.5.3.1.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
