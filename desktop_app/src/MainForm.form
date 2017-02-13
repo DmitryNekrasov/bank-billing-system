@@ -128,8 +128,8 @@
                       </grid>
                     </constraints>
                     <properties>
-                      <editable value="false"/>
-                      <enabled value="true"/>
+                      <editable value="true"/>
+                      <enabled value="false"/>
                       <text value="100"/>
                     </properties>
                   </component>
@@ -140,8 +140,8 @@
                       </grid>
                     </constraints>
                     <properties>
-                      <editable value="false"/>
-                      <enabled value="true"/>
+                      <editable value="true"/>
+                      <enabled value="false"/>
                       <text value="32"/>
                     </properties>
                   </component>

@@ -116,12 +116,12 @@ public class MainForm extends JFrame {
 
     private void setSumEnabled(boolean value) {
         sumLabel.setEnabled(value);
-        sumTextField.setEditable(value);
+        sumTextField.setEnabled(value);
     }
 
     private void setDepositToEnabled(boolean value) {
         depositToLabel.setEnabled(value);
-        depositToTextField.setEditable(value);
+        depositToTextField.setEnabled(value);
     }
 
     private void updateCurrency() {
