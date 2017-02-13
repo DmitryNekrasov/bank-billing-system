@@ -91,7 +91,8 @@ class Communicator {
 
         try {
             connection.sendRPC("bank_server", "getBalance", new OtpErlangList(new OtpErlangObject[] {
-                    new OtpErlangInt(deposit), new OtpErlangInt(pin)}));
+                    new OtpErlangInt(deposit), new OtpErlangInt(pin)
+            }));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -122,7 +123,8 @@ class Communicator {
     boolean putMoney(int deposit, int pin, double sum) {
         try {
             connection.sendRPC("bank_server", "putMoney", new OtpErlangList(new OtpErlangObject[] {
-                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangDouble(sum)}));
+                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangDouble(sum)
+            }));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -146,7 +148,8 @@ class Communicator {
     boolean getMoney(int deposit, int pin, double sum) {
         try {
             connection.sendRPC("bank_server", "getMoney", new OtpErlangList(new OtpErlangObject[] {
-                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangDouble(sum)}));
+                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangDouble(sum)
+            }));
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -166,5 +169,30 @@ class Communicator {
         }
 
         return !received.toString().equals("false");
+    }
+
+    boolean sendMoney(int deposit, int pin, int depositTo, double sum) {
+        try {
+            connection.sendRPC("bank_server", "sendMoney", new OtpErlangList(new OtpErlangObject[] {
+                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangInt(depositTo), new OtpErlangDouble(sum)
+            }));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        OtpErlangObject received;
+        try {
+            received = connection.receiveRPC();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (received.toString().contains(BAD_RPC)) {
+            System.err.println(received);
+            return false;
+        }
+
+        return Boolean.valueOf(received.toString());
     }
 }
