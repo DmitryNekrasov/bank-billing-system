@@ -16,5 +16,9 @@ public class Main {
         System.out.println(communicator.putMoney(64, 16, 1000));
         balance = communicator.getBalance(64, 16);
         System.out.println(balance);
+
+        System.out.println(communicator.getMoney(64, 16, 25));
+        balance = communicator.getBalance(64, 16);
+        System.out.println(balance);
     }
 }

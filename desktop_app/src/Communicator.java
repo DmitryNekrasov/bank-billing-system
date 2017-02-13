@@ -119,10 +119,10 @@ class Communicator {
         return balance;
     }
 
-    boolean putMoney(int deposit, int pin, int sum) {
+    boolean putMoney(int deposit, int pin, double sum) {
         try {
             connection.sendRPC("bank_server", "putMoney", new OtpErlangList(new OtpErlangObject[] {
-                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangInt(sum)}));
+                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangDouble(sum)}));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -141,5 +141,30 @@ class Communicator {
         }
 
         return Boolean.valueOf(received.toString());
+    }
+
+    boolean getMoney(int deposit, int pin, double sum) {
+        try {
+            connection.sendRPC("bank_server", "getMoney", new OtpErlangList(new OtpErlangObject[] {
+                    new OtpErlangInt(deposit), new OtpErlangInt(pin), new OtpErlangDouble(sum)}));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        OtpErlangObject received;
+        try {
+            received = connection.receiveRPC();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        if (received.toString().contains(BAD_RPC)) {
+            System.err.println(received);
+            return false;
+        }
+
+        return !received.toString().equals("false");
     }
 }
