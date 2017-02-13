@@ -2,7 +2,9 @@ import com.ericsson.otp.erlang.*;
 
 import java.io.IOException;
 
-public class Communicator {
+class Communicator {
+
+    private static final String BAD_RPC = "badrpc";
 
     private String serverNodeName;
     private String selfNodeName;
@@ -11,7 +13,22 @@ public class Communicator {
 
     private OtpConnection connection;
 
-    public Communicator(String serverNodeName, String selfNodeName) {
+    public static class Balance {
+        double value;
+        String currency;
+
+        Balance(double value, String currency) {
+            this.value = value;
+            this.currency = currency;
+        }
+
+        @Override
+        public String toString() {
+            return value + " " + currency;
+        }
+    }
+
+    Communicator(String serverNodeName, String selfNodeName) {
         this.serverNodeName = serverNodeName;
         this.selfNodeName = selfNodeName;
         this.connected = false;
@@ -40,7 +57,7 @@ public class Communicator {
         return true;
     }
 
-    public int[] getCurrency() {
+    int[] getCurrency() {
         int[] res = new int[2];
         res[0] = -1;
 
@@ -59,7 +76,7 @@ public class Communicator {
             return res;
         }
 
-        if (!received.toString().contains("badrpc")) {
+        if (!received.toString().contains(BAD_RPC)) {
             res[0] = Integer.valueOf(received.elementAt(0).toString());
             res[1] = Integer.valueOf(received.elementAt(1).toString());
         } else {
@@ -69,4 +86,35 @@ public class Communicator {
         return res;
     }
 
+    Balance getBalance(int deposit, int pin) {
+        Balance balance = null;
+
+        try {
+            connection.sendRPC("bank_server", "getBalance", new OtpErlangList(new OtpErlangObject[] {new OtpErlangInt(deposit), new OtpErlangInt(pin)}));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        OtpErlangObject received;
+        try {
+            received = connection.receiveRPC();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Balance(-1, "usd");
+        }
+
+        if (!received.toString().contains(BAD_RPC)) {
+            if (!received.toString().equals("false")) {
+                double value = Double.valueOf(((OtpErlangTuple) received).elementAt(0).toString());
+                String currency = ((OtpErlangTuple) received).elementAt(1).toString();
+                balance = new Balance(value, currency);
+            } else {
+                System.err.println("false");
+            }
+        } else {
+            System.err.println(received);
+        }
+
+        return balance;
+    }
 }

@@ -9,5 +9,8 @@ public class Main {
         int[] currency = communicator.getCurrency();
         System.out.println("eur: " + currency[0]);
         System.out.println("usd: " + currency[1]);
+
+        Communicator.Balance balance = communicator.getBalance(64, 16);
+        System.out.println(balance);
     }
 }
