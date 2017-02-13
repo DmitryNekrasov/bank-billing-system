@@ -10,10 +10,18 @@
 
 %% API
 -export([main/0,
+  getCurrency/0,
   getBalance/2,
   getMoney/3,
   putMoney/3,
   sendMoney/4]).
+
+getCurrency() ->
+  ConverterPid = global:whereis_name(converter),
+  ConverterPid ! {get_currency, self()},
+  receive
+    {currency, Euro, Dollar} -> {Euro, Dollar}
+  end.
 
 getBalance(Deposit, Pin) ->
   BankPid = global:whereis_name(bank),
@@ -147,7 +155,10 @@ converter(Euro, Dollar) ->
       Pid ! {convert_result, NewValue},
       converter(Euro, Dollar);
     {update, NewEuro, NewDollar} ->
-      converter(NewEuro, NewDollar)
+      converter(NewEuro, NewDollar);
+    {get_currency, Pid} ->
+      Pid ! {currency, Euro, Dollar},
+      converter(Euro, Dollar)
   end.
 
 convert(Value, Euro, _Dollar, rub, eur) -> Value / Euro;
@@ -155,7 +166,8 @@ convert(Value, Euro, _Dollar, eur, rub) -> Value * Euro;
 convert(Value, _Euro, Dollar, rub, usd) -> Value / Dollar;
 convert(Value, _Euro, Dollar, usd, rub) -> Value * Dollar;
 convert(Value, Euro, Dollar, eur, usd) -> (Value * Euro) / Dollar;
-convert(Value, Euro, Dollar, usd, eur) -> (Value * Dollar) / Euro.
+convert(Value, Euro, Dollar, usd, eur) -> (Value * Dollar) / Euro;
+convert(Value, _Euro, _Dollar, C, C) -> Value.
 
 bank(Clients) when is_list(Clients) ->
   receive

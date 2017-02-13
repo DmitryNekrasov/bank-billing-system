@@ -21,7 +21,8 @@
   terminate/2,
   code_change/3]).
 
--export([getBalance/2,
+-export([getCurrency/0,
+  getBalance/2,
   putMoney/3,
   getMoney/3,
   sendMoney/4]).
@@ -82,6 +83,9 @@ init([]) ->
   {noreply, NewState :: #state{}, timeout() | hibernate} |
   {stop, Reason :: term(), Reply :: term(), NewState :: #state{}} |
   {stop, Reason :: term(), NewState :: #state{}}).
+handle_call(get_currency, _From, State) ->
+  Reply = bank:getCurrency(),
+  {reply, Reply, State};
 handle_call({get_balance, Deposit, Pin}, _From, State) ->
   Reply = bank:getBalance(Deposit, Pin),
   {reply, Reply, State};
@@ -96,6 +100,9 @@ handle_call({send_money, Deposit, Pin, DepositTo, Sum}, _From, State) ->
   {reply, Reply, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
+
+getCurrency() ->
+  gen_server:call({global, ?MODULE}, get_currency).
 
 getBalance(Deposit, Pin) ->
   gen_server:call({global, ?MODULE}, {get_balance, Deposit, Pin}).
